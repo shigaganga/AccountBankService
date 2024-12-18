@@ -30,7 +30,7 @@ public class AccountController {
     // Get all accounts
     @GetMapping
     public ResponseEntity<List<Account>> getAllAccounts() {
-        logger.info("Fetching all accounts");
+        logger.info("Fetching all account");
         List<Account> accountList = accountServiceImpl.getAllAccounts();
         return new ResponseEntity<>(accountList, HttpStatus.OK);
     }
