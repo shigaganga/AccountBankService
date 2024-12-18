@@ -36,12 +36,27 @@ public class AccountController {
     }
 
     // Get accounts by User ID
-    @GetMapping("/user/{userId}")
+    @GetMapping("/users/{userId}")
     public ResponseEntity<List<Account>> getAccountsByUserId(@PathVariable Long userId) {
         logger.info("Fetching accounts for User ID: {}", userId);
         List<Account> accounts = accountServiceImpl.getAccountsByUserId(userId);
         return accounts.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
                 : new ResponseEntity<>(accounts, HttpStatus.OK);
+    }
+    //Get accounts by AccountId
+    @GetMapping("/{accountId}")
+    public ResponseEntity<Account>getAccount(@PathVariable Long accountId,@RequestBody Account account){
+        logger.info("getting an account with accountId:{}",accountId);
+        try {
+            // Fetch the account
+            Account getAccount = accountServiceImpl.getAccountByAccountId(accountId);
+            // Return the account with HTTP status 200 OK
+            return ResponseEntity.ok(getAccount);
+        } catch (Exception e) {
+            // Log the error and return 404 Not Found if the account doesn't exist
+            logger.error("Error fetching account with accountId {}: {}", accountId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     // Update an account by Account ID
@@ -63,14 +78,24 @@ public class AccountController {
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    // Get account balance by Account ID
-    @GetMapping("/{accountId}/balance")
-    public ResponseEntity<BigDecimal> getBalanceByAccountId(@PathVariable Long accountId) {
+    // Get account balance by Account ID using query parameter
+    @GetMapping("/balance")
+    public ResponseEntity<BigDecimal> getBalanceByQueryParam(@RequestParam Long accountId) {
         logger.info("Fetching balance for Account ID: {}", accountId);
         BigDecimal balance = accountServiceImpl.getBalanceByAccountId(accountId);
         return balance != null ? new ResponseEntity<>(balance, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
+    // Get account balance by Account ID using path parameter
+    @GetMapping("/{accountId}/balance")
+    public ResponseEntity<BigDecimal> getBalanceByPathParam(@PathVariable Long accountId) {
+        logger.info("Fetching balance for Account ID: {}", accountId);
+        BigDecimal balance = accountServiceImpl.getBalanceByAccountId(accountId);
+        return balance != null ? new ResponseEntity<>(balance, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
 
     // Delete an account by Account ID
     @DeleteMapping("/{accountId}")
