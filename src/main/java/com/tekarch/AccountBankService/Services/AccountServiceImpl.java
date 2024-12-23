@@ -20,7 +20,7 @@ import java.util.List;
 public class AccountServiceImpl implements AccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-    private static final String USER_MS_URL = "http://localhost:8090/users"; // Base URL for User Microservice
+    private static final String USER_MS_URL = "http://localhost:8080/users"; // Base URL for User Microservice
 
     private final RestTemplate restTemplate;
     private final AccountRepository accountRepository;

@@ -1,9 +1,11 @@
+
 package com.tekarch.AccountBankService.DTO;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.sql.Timestamp;
-
+import lombok.Getter;
+import lombok.Setter;
+import java.sql.Timestamp;
 @Getter
 @Setter
 public class UserDTO {
@@ -17,5 +19,7 @@ public class UserDTO {
     private Timestamp createdAt;       // Default: CURRENT_TIMESTAMP
     private Timestamp updatedAt;       // Default: CURRENT_TIMESTAMP
 }
+
+
 
 

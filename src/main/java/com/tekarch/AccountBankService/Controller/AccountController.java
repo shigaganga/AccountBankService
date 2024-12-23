@@ -30,6 +30,7 @@ public class AccountController {
     // Get all accounts
     @GetMapping
     public ResponseEntity<List<Account>> getAllAccounts() {
+        logger.info("Fetching all accounts");
         logger.info("Fetching all account");
         List<Account> accountList = accountServiceImpl.getAllAccounts();
         return new ResponseEntity<>(accountList, HttpStatus.OK);
@@ -45,15 +46,15 @@ public class AccountController {
     }
     //Get accounts by AccountId
     @GetMapping("/{accountId}")
-    public ResponseEntity<Account>getAccount(@PathVariable Long accountId,@RequestBody Account account){
+    public ResponseEntity<Account>getAccount(@PathVariable Long accountId){
         logger.info("getting an account with accountId:{}",accountId);
         try {
-            // Fetch the account
+// Fetch the account
             Account getAccount = accountServiceImpl.getAccountByAccountId(accountId);
-            // Return the account with HTTP status 200 OK
+// Return the account with HTTP status 200 OK
             return ResponseEntity.ok(getAccount);
         } catch (Exception e) {
-            // Log the error and return 404 Not Found if the account doesn't exist
+// Log the error and return 404 Not Found if the account doesn't exist
             logger.error("Error fetching account with accountId {}: {}", accountId, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
