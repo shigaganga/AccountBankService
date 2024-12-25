@@ -11,18 +11,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor // Lombok annotation to generate a constructor for final fields
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
-    // Dynamic User Microservice URL from application properties
     @Value("${user.ms.url:http://localhost:8080/users}")
     private String userMsUrl;
 
@@ -30,10 +31,10 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
 
     /**
-     * Validates if the user exists by calling the User Microservice.
+     * Validates if a user exists by calling the User Microservice.
      *
-     * @param userId The ID of the user to validate.
-     * @return True if the user exists, false otherwise.
+     * @param userId User ID to validate.
+     * @return true if the user exists, false otherwise.
      */
     private boolean isUserExists(Long userId) {
         String url = userMsUrl + "/" + userId;
@@ -46,42 +47,42 @@ public class AccountServiceImpl implements AccountService {
                     UserDTO.class
             );
             return response.getStatusCode() == HttpStatus.OK;
-        } catch (Exception e) {
-            logger.error("Error validating user existence for User ID {}: {}", userId, e.getMessage());
+        } catch (RestClientException e) {
+            logger.error("I/O error occurred while validating user existence for User ID {}. URL: {}. Error: {}", userId, url, e.getMessage());
             return false;
         }
     }
 
+
     @Override
     public Account createAccount(Account account) {
-        if (isUserExists(account.getUserId())) {
-            logger.info("Creating account for User ID: {}", account.getUserId());
-            return accountRepository.save(account);
-        } else {
+        if (!isUserExists(account.getUserId())) {
             logger.error("User with ID {} not found. Account creation failed.", account.getUserId());
-            throw new UserNotFoundException("User with ID " + account.getUserId() + " not found. Account Creation Failed");
+            throw new UserNotFoundException("User with ID " + account.getUserId() + " not found.");
         }
+        logger.info("Creating new account for User ID: {}", account.getUserId());
+        return accountRepository.save(account);
     }
 
     @Override
     public List<Account> getAllAccounts() {
-        logger.info("Fetching all accounts.");
+        logger.info("Retrieving all accounts.");
         return accountRepository.findAll();
     }
 
     @Override
     public List<Account> getAccountsByUserId(Long userId) {
-        if (isUserExists(userId)) {
-            logger.info("Fetching accounts for User ID: {}", userId);
-            return accountRepository.findByUserId(userId);
-        } else {
-            throw new UserNotFoundException("User ID " + userId + " not found.");
+        if (!isUserExists(userId)) {
+            logger.error("User with ID {} not found. Unable to retrieve accounts.", userId);
+            throw new UserNotFoundException("User with ID " + userId + " not found.");
         }
+        logger.info("Fetching accounts for User ID: {}", userId);
+        return accountRepository.findByUserId(userId);
     }
 
     @Override
     public Account getAccountByAccountId(Long accountId) {
-        logger.info("Fetching account with ID: {}", accountId);
+        logger.info("Fetching account with Account ID: {}", accountId);
         return accountRepository.findById(accountId)
                 .orElseThrow(() -> new UserNotFoundException("Account with ID " + accountId + " not found."));
     }
@@ -102,22 +103,21 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account updateAccountByUserIdAndAccountId(Long userId, Long accountId, Account updatedAccount) {
-        if (isUserExists(userId)) {
-            logger.info("Updating account for User ID {} and Account ID {}", userId, accountId);
-            Account existingAccount = accountRepository.findByUserIdAndAccountId(userId, accountId);
-            if (existingAccount != null) {
-                existingAccount.setAccountNumber(updatedAccount.getAccountNumber());
-                existingAccount.setAccountType(updatedAccount.getAccountType());
-                existingAccount.setBalance(updatedAccount.getBalance());
-                existingAccount.setCurrency(updatedAccount.getCurrency());
-                return accountRepository.save(existingAccount);
-            } else {
-                logger.error("Account with User ID {} and Account ID {} not found.", userId, accountId);
-                throw new UserNotFoundException("Account not found for User ID " + userId + " and Account ID " + accountId);
-            }
-        } else {
+        if (!isUserExists(userId)) {
+            logger.error("User with ID {} not found. Update operation failed.", userId);
             throw new UserNotFoundException("User with ID " + userId + " not found.");
         }
+
+        logger.info("Updating account with ID {} for User ID {}", accountId, userId);
+        Account existingAccount = Optional.ofNullable(accountRepository.findByUserIdAndAccountId(userId, accountId))
+                .orElseThrow(() -> new UserNotFoundException("Account not found for User ID " + userId + " and Account ID " + accountId));
+
+        existingAccount.setAccountNumber(updatedAccount.getAccountNumber());
+        existingAccount.setAccountType(updatedAccount.getAccountType());
+        existingAccount.setBalance(updatedAccount.getBalance());
+        existingAccount.setCurrency(updatedAccount.getCurrency());
+
+        return accountRepository.save(existingAccount);
     }
 
     @Override
@@ -131,12 +131,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<Account> getBalancesByUserId(Long userId) {
-        if (isUserExists(userId)) {
-            logger.info("Fetching balances for User ID: {}", userId);
-            return accountRepository.findByUserId(userId);
-        } else {
-            throw new UserNotFoundException("User ID " + userId + " not found.");
+        if (!isUserExists(userId)) {
+            logger.error("User ID {} not found. Unable to retrieve balances.", userId);
+            throw new UserNotFoundException("User with ID " + userId + " not found.");
         }
+        logger.info("Fetching balances for User ID: {}", userId);
+        return accountRepository.findByUserId(userId);
     }
 
     @Override
