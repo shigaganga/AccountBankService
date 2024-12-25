@@ -8,6 +8,7 @@ import com.tekarch.AccountBankService.Services.Interface.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +21,10 @@ import java.util.List;
 public class AccountServiceImpl implements AccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-    private static final String USER_MS_URL = "http://localhost:8080/users"; // Base URL for User Microservice
+
+    // Dynamic User Microservice URL from application properties
+    @Value("${user.ms.url:http://localhost:8080/users}")
+    private String userMsUrl;
 
     private final RestTemplate restTemplate;
     private final AccountRepository accountRepository;
@@ -32,7 +36,7 @@ public class AccountServiceImpl implements AccountService {
      * @return True if the user exists, false otherwise.
      */
     private boolean isUserExists(Long userId) {
-        String url = USER_MS_URL + "/" + userId;
+        String url = userMsUrl + "/" + userId;
         try {
             logger.info("Validating user existence for User ID: {}", userId);
             ResponseEntity<UserDTO> response = restTemplate.exchange(
@@ -41,12 +45,7 @@ public class AccountServiceImpl implements AccountService {
                     HttpEntity.EMPTY,
                     UserDTO.class
             );
-            if(response.getStatusCode() == HttpStatus.OK) {
-                return true;
-            }else{
-                return false;
-            }
-
+            return response.getStatusCode() == HttpStatus.OK;
         } catch (Exception e) {
             logger.error("Error validating user existence for User ID {}: {}", userId, e.getMessage());
             return false;
