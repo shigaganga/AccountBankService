@@ -15,4 +15,5 @@ public interface AccountService {
     boolean deleteAccount(Long accountId);
     List<Account> getBalancesByUserId(Long userId);
     BigDecimal getBalanceByAccountId(Long accountId);
+     BigDecimal getTransactionLimit(Long accountId);
 }

@@ -24,7 +24,7 @@ public class AccountServiceImpl implements AccountService {
 
     private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
 
-    @Value("${user.ms.url:http://localhost:8080/users}")
+    @Value("${user.ms.url}")
     private String userMsUrl;
 
     private final RestTemplate restTemplate;
@@ -146,4 +146,9 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new UserNotFoundException("Account with ID " + accountId + " not found."));
         return account.getBalance();
     }
+    public BigDecimal getTransactionLimit(Long accountId) {
+        // Assuming static limit of 10,000 for all accounts
+        return new BigDecimal("10000.00");
+    }
+
 }

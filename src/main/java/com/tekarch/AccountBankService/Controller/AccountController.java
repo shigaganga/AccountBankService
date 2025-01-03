@@ -106,6 +106,13 @@ public class AccountController {
         return isDeleted ? new ResponseEntity<>(HttpStatus.NO_CONTENT)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+    @GetMapping("/{accountId}/transactionlimit")
+    public ResponseEntity<BigDecimal> getTransactionLimit(@PathVariable Long accountId) {
+        BigDecimal transactionLimit = accountServiceImpl.getTransactionLimit(accountId);
+        return transactionLimit != null
+                ? new ResponseEntity<>(transactionLimit, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
 
     // Exception Handling
     @ExceptionHandler(Exception.class)
